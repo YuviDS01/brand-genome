@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     app_name: str = "Brand Genome API"
     environment: str = "development"
 
+    # --- Crawler ---
+    crawler_mode: str = "mock"
 
 @lru_cache
 def get_settings() -> Settings:
