@@ -1,11 +1,10 @@
-# TODO: implemented in a later step (see docs/brand-genome-architecture.md)
 """
 Research job service.
 
-Step 7 scope: create a job row and let the API report on it. Actually pushing
-the job onto Redis for a worker to pick up is Step 8 -- until then, a created
-job simply sits at status=QUEUED with nothing consuming it yet. That's called
-out explicitly below rather than silently pretending the job is being worked.
+Step 8 update: job creation now actually enqueues the job onto Redis via
+Celery's .delay() -- a worker process (see worker/celery_app.py,
+app/jobs/pipeline.py) will pick it up and move its status forward. Before
+this step, jobs were created but nothing ever consumed them.
 """
 
 import logging
@@ -13,6 +12,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session, selectinload
 
+from app.celery_app import celery_app
 from app.models.job import ResearchJob
 from app.schemas.research import ResearchCreateRequest
 
@@ -30,9 +30,14 @@ def create_research_job(db: Session, payload: ResearchCreateRequest) -> Research
 
     logger.info("[JOB] Created research job %s for brand_name=%r", job.id, job.brand_name_input)
 
-    # TODO (Step 8): push job.id onto the Redis queue for the worker to pick up.
-    # Left as a no-op for now so the job is visible/queryable via the API
-    # without silently implying background processing is already happening.
+    try:
+        celery_app.send_task("app.jobs.pipeline.run_research_pipeline", args=[str(job.id)])
+        logger.info("[JOB] Enqueued job %s onto Redis for worker pickup.", job.id)
+    except Exception:
+        # Redis/broker being unreachable shouldn't take down job creation --
+        # the job row still exists and is queryable, it just won't move past
+        # QUEUED until a worker is available to pick it up.
+        logger.exception("[JOB] Could not enqueue job %s -- is Redis/the worker running?", job.id)
 
     return job
 

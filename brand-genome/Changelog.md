@@ -1,3 +1,4 @@
+
 # Brand Genome
 
 A prototype that researches a brand from public web sources and renders it as a
