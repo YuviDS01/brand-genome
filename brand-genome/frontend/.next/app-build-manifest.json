@@ -10,6 +10,21 @@
       "static/chunks/main-app.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
+    ],
+    "/research/[jobId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/research/[jobId]/page.js"
+    ],
+    "/brand/[brandId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/brand/[brandId]/page.js"
+    ],
+    "/brand/[brandId]/not-found": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/brand/[brandId]/not-found.js"
     ]
   }
 }

@@ -6,7 +6,17 @@ import type {
   ResearchJobStatus,
 } from "@/types/genome";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const CLIENT_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+// Only relevant when running inside Docker Compose: server-side (SSR/server
+// component) code executes inside the frontend *container*, where
+// "localhost:8000" doesn't reach the backend container -- it needs the
+// Docker network's service name instead. Falls back to the client URL for
+// local `npm run dev` (outside Docker), where they're the same thing.
+const SERVER_API_BASE_URL = process.env.INTERNAL_API_BASE_URL ?? CLIENT_API_BASE_URL;
+
+function resolveBaseUrl(): string {
+  return typeof window === "undefined" ? SERVER_API_BASE_URL : CLIENT_API_BASE_URL;
+}
 
 export class ApiError extends Error {
   code: string;
@@ -20,7 +30,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(`${resolveBaseUrl()}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
