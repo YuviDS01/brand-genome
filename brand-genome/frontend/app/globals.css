@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  background-color: #EFEEE6;
+}
+
+body {
+  color: #191A18;
+  font-feature-settings: "ss01" on;
+}
+
+/* Visible keyboard focus everywhere, never suppressed */
+:focus-visible {
+  outline: 2px solid #3F6D5C;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
