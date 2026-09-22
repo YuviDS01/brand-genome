@@ -1,23 +1,28 @@
 """
-FastAPI application skeleton (STEP 6).
+FastAPI application (STEP 7 adds the first real endpoints).
 
 What exists at this step:
   - App instance, CORS, structured logging, consistent error responses
   - /health for liveness checks
-  - The full /api router tree mounted, but most path operations inside it are
-    still empty (added in Steps 7 and 13) -- hitting them now returns 404,
-    which is expected until those steps land.
+  - POST /api/research, GET /api/research/{job_id}, GET /api/research/{job_id}/status
+    -- real endpoints backed by the database (see app/api/research.py)
+  - /api/brands and the dashboard /genome endpoint are still empty routers,
+    added in Steps 9-13 once there's real data to serve.
 
 Run it:
     cd backend
     uvicorn app.main:app --reload
 Then visit http://localhost:8000/docs for interactive API docs, or
 http://localhost:8000/health for a liveness check.
+
+Note: hitting POST /api/research right now requires a live Postgres with
+Step 3's schema applied (DATABASE_URL in .env) -- the app itself will start
+fine without one, but that specific endpoint will fail until the DB is reachable.
 """
 
 import logging
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -56,6 +61,18 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"error": {"code": "validation_error", "message": str(exc.errors())}},
     )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    # Routes raise HTTPException(detail={"code": ..., "message": ...}); fall
+    # back gracefully if some future route raises with a plain string detail.
+    detail = exc.detail
+    if isinstance(detail, dict) and "code" in detail and "message" in detail:
+        content = {"error": detail}
+    else:
+        content = {"error": {"code": "http_error", "message": str(detail)}}
+    return JSONResponse(status_code=exc.status_code, content=content)
 
 
 @app.exception_handler(Exception)

@@ -13,10 +13,23 @@ from datetime import datetime, timezone
 
 
 class CrawlError(Exception):
-    def __init__(self, url: str, reason: str, http_status: int | None = None):
+    def __init__(
+        self,
+        url: str,
+        reason: str,
+        http_status: int | None = None,
+        retryable: bool = True,
+    ):
         self.url = url
         self.reason = reason
         self.http_status = http_status
+        # Step 20: whether it's worth trying a *different technique* (e.g. HTTP
+        # failed, try a headless browser) for this same URL. False for anything
+        # that means "not fetchable/permitted" -- access-control failures,
+        # SSRF blocks, disallowed schemes/content-types -- since a different
+        # crawling technique won't change the outcome, only the appearance of
+        # trying harder.
+        self.retryable = retryable
         super().__init__(f"{reason} ({url})")
 
 

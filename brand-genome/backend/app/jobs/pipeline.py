@@ -252,7 +252,7 @@ def run_research_pipeline(job_id: str) -> None:
 
         resolved = resolve_conflicts(
             candidates,
-            confidence_fn=lambda c: confidence_for_fact(url_to_source[c.source_url].source_type, c.data_type),
+            confidence_fn=lambda c, n: confidence_for_fact(url_to_source[c.source_url], c.data_type, n),
         )
 
         for r in resolved:
